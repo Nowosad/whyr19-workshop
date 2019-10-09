@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Basics of Spatial Data Analysis</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Jakub Nowosad" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+    <link href="libs/ionicons/css/ionicons.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Basics of Spatial Data Analysis
+### Jakub Nowosad
+### Workshop, 2019-09-27
+
+---
+
+
+
+
+class: inverse, left, bottom
+# Ecosystem(s)
+
+---
+# Ecosystem(s)
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="figs/rb.png" alt="From Roger Bivand's slides 'A practical history of R'" width="80%" /&gt;
+&lt;p class="caption"&gt;From Roger Bivand's slides 'A practical history of R'&lt;/p&gt;
+&lt;/div&gt;
+
+---
+# Ecosystem(s)
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="figs/rb2.png" alt="From Roger Bivand's slides 'A practical history of R-sig-geo'" width="80%" /&gt;
+&lt;p class="caption"&gt;From Roger Bivand's slides 'A practical history of R-sig-geo'&lt;/p&gt;
+&lt;/div&gt;
+
+---
+# Ecosystem(s)
+
+.pull-left[
+R packages:
+
+- **sf**, **raster** - spatial classes
+- **dplyr**, **rmapshaper** - processing of atttribute tables/geometries 
+- **rnaturalearth**, **osmdata**, **getlandsat** - spatial data download
+- **rgrass7**, **RQGIS**, **RSAGA**, **link2GI** - connecting with GIS software
+- **gstat**, **mlr**, **CAST** - spatial data modeling
+- **rasterVis**, **tmap**, **ggplot** - static visualizations
+- **leaflet**, **mapview**, **mapdeck** - interactive visualizations
+- many more...
+]
+
+.pull-right[
+
+]
+
+---
+# Ecosystem(s)
+
+.pull-left[
+Spatial classes:
+
+- **sf**
+- **raster**
+]
+
+.pull-right[
+Visualizations:
+
+- **tmap**
+]
+
+
+---
+# Ecosystem(s)
+
+.pull-left[
+Spatial classes:
+
+- **sf**
+- **raster**
+- **sp**
+- **stars**
+- **terra**
+- **spatial**
+- ...
+]
+
+.pull-right[
+Visualizations:
+
+- **tmap**
+- **ggplot** 
+- **rasterVis**
+- **leaflet**
+- **mapview**
+- **mapdeck**
+- ...
+]
+
+
+---
+# Ecosystem(s)
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="figs/sf-infrastructure.png" alt="Pebesma, Edzer. Simple features for R: standardized support for spatial vector data. The R Journal 10.1 (2018): 439-446." width="70%" /&gt;
+&lt;p class="caption"&gt;Pebesma, Edzer. Simple features for R: standardized support for spatial vector data. The R Journal 10.1 (2018): 439-446.&lt;/p&gt;
+&lt;/div&gt;
+
+
+---
+# Prerequisites
+
+.pull-left[
+We can install the packages used in the workshop as follows:
+
+
+```r
+pkgs = c(
+  "sf",                
+  "raster",            
+  "dplyr",            
+  "tmap",
+  "spData",
+  "usethis"
+)
+to_install = !pkgs %in% installed.packages()
+if(any(to_install)) {
+  install.packages(pkgs[to_install])
+}
+```
+]
+
+.pull-right[
+The code below can be used to download all the scripts and data for the workshop:
+
+```r
+usethis::use_course("http://bit.ly/whyr19w")
+```
+]
+
+---
+# Exercises
+
+1. Think about how R can help you? 
+Why do you want to learn how to use it for spatial data analysis?
+2. Have a look at [CRAN Task View: Analysis of Spatial Data](https://cran.r-project.org/web/views/Spatial.html) and check if there are any packages that may be useful to you in your daily work?
+
+---
+class: inverse, left, bottom
+# Spatial data representation
+
+---
+# Spatial data representation
+
+**sf**:
+- The **sf** package is the successor of the **sp** package based on the OGC standard Simple Features.
+- Combines the functionality of three previous packages: **sp**, **rgeos** and **rgdal**.
+- Most of the functions in this package start with a prefix `st_`.
+- This package handles additional vector data types (e.g. polygon and multipolygon are two separate classes), allows for easier data processing, and support sfor spatial databases such as PostGIS.
+- https://r-spatial.github.io/sf/ and https://github.com/rstudio/cheatsheets/blob/master/sf.pdf
+
+**raster**:
+- The **raster** package contains classes and methods representing raster objects and operations.
+- It allows raster data to be loaded and saved.
+- It allows raster algebra and raster processing.
+- It includes a number of additional functions, e.g. for analysis of terrain characteristics.
+- It allows you to work on large sets of data.
+- ?`raster-package` and http://www.rpubs.com/etiennebr/visualraster
+
+---
+# Spatial data reading - vector
+
+.pull-left[
+
+```r
+library(sf)
+```
+
+```
+## Linking to GEOS 3.7.1, GDAL 2.3.2, PROJ 5.2.0
+```
+
+```r
+poland = st_read("data/poland.gpkg")
+```
+
+```
+## Reading layer `polska' from data source `/home/jn/Science/conferences/whyr19-workshop/data/poland.gpkg' using driver `GPKG'
+## Simple feature collection with 1 feature and 3 fields
+## geometry type:  POLYGON
+## dimension:      XY
+## bbox:           xmin: 171842.5 ymin: 132323.8 xmax: 861798.4 ymax: 775305.9
+## epsg (SRID):    NA
+## proj4string:    +proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
+```
+- The `st_write()` function can be used for spatial vector data writing.
+]
+
+.pull-right[
+
+```r
+plot(poland)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Spatial data structure - vector
+
+
+```r
+poland
+```
+
+```
+## Simple feature collection with 1 feature and 3 fields
+## geometry type:  POLYGON
+## dimension:      XY
+## bbox:           xmin: 171842.5 ymin: 132323.8 xmax: 861798.4 ymax: 775305.9
+## epsg (SRID):    NA
+## proj4string:    +proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
+##     name  pop_est gdp_md_est                           geom
+## 1 Poland 38476269    1052000 POLYGON ((487928.3 182549, ...
+```
+
+---
+# Spatial data reading - raster
+
+.pull-left[
+
+```r
+library(raster)
+dem = raster("data/poland_srtm.tif")
+```
+
+- The `writeRaster()` function can be used for spatial raster data writing.
+]
+
+.pull-right[
+
+```r
+plot(dem)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Spatial data structure - raster
+
+
+```r
+dem
+```
+
+```
+## class      : RasterLayer 
+## dimensions : 702, 1202, 843804  (nrow, ncol, ncell)
+## resolution : 0.008333333, 0.008333333  (x, y)
+## extent     : 14.125, 24.14167, 48.99167, 54.84167  (xmin, xmax, ymin, ymax)
+## crs        : +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 
+## source     : /home/jn/Science/conferences/whyr19-workshop/data/poland_srtm.tif 
+## names      : poland_srtm 
+## values     : -9, 2220  (min, max)
+```
+
+---
+# Exercises
+
+1. Read the `data/wlkp_pn.gpkg` file containing the borders of the Wielkopolski National Park into R.
+Display this object and view its structure.
+What can you say about the contents of this file? 
+What type of data does it store? 
+What is the coordinate system used?
+How many attributes does it contain?
+What is its geometry?
+2. Read the `data/wlkp_pn_dem.tif` file containing the digital elevation model for the Wielkopoland National Park area into R.
+Display this object and view its structure.
+What can you say about the contents of this file? 
+What type of data does it store? 
+What is the coordinate system used?
+How many attributes does it contain?
+How many dimensions does it have?
+What is the data resolution?
+
+---
+class: inverse, left, bottom
+# Spatial visualization
+
+---
+# Spatial visualization
+
+
+```r
+library(tmap)
+```
+
+- Thematic mapping package
+- It allows you to create static maps, animated maps and interactive maps.
+- It works by adding subsequent layers to visualize and then modifying them.
+- https://github.com/mtennekes/tmap - list of additional materials about the **tmap** package 
+
+---
+# Spatial visualization
+
+Open the `code/spatial_vis.R` file. 
+Run the code and:
+
+1. Change the map title from "My map" to "New Zealand".
+2. Update the map credits with your own name and today's date.
+3. Change the color palette to "BuGn". 
+(You can also try other palettes from http://colorbrewer2.org/)
+4. Put the north arrow in the top right corner of the map.
+5. Improve the legend title by adding the legend units.
+6. Increase the number of breaks in the scale bar.
+7. Change the borders' color of the New Zealand's regions to black. 
+Decrease the line width.
+8. Change the background color to any color of your choice.
+
+---
+# Spatial visualization
+
+.left-code[
+
+```r
+tm_shape(poland) + 
+  tm_polygons()
+```
+]
+
+.right-plot[
+![](index_files/figure-html/tm1-1.png)
+]
+
+
+---
+# Spatial visualization
+
+.left-code[
+
+```r
+tm_shape(poland) + 
+  tm_polygons() + 
+  tm_scale_bar(position = c("left", 
+                            "bottom")) 
+```
+]
+
+.right-plot[
+![](index_files/figure-html/tm2-1.png)
+]
+
+---
+# Spatial visualization
+
+.left-code[
+
+```r
+tm_shape(poland) + 
+  tm_polygons() + 
+  tm_scale_bar(position = c("left", 
+                            "bottom")) + 
+  tm_compass()
+```
+]
+
+.right-plot[
+![](index_files/figure-html/tm3-1.png)
+]
+
+---
+# Spatial visualization
+
+.left-code[
+
+```r
+tm_shape(poland) + 
+  tm_polygons() + 
+  tm_scale_bar(position = c("left", 
+                            "bottom")) + 
+  tm_compass() +
+  tm_layout(title = "Poland")
+```
+]
+
+.right-plot[
+![](index_files/figure-html/tm4-1.png)
+]
+
+---
+# Spatial visualization
+
+
+```r
+tmap_mode("view")
+```
+
+
+```r
+tm_shape(poland) + 
+  tm_polygons() + 
+  tm_layout(title = "Poland")
+```
+
+
+```r
+tmap_mode("plot")
+```
+
+---
+# Spatial visualization
+
+.left-code[
+
+
+```r
+tm_shape(dem) + 
+  tm_raster()
+```
+]
+
+.right-plot[
+![](index_files/figure-html/tm5-1.png)
+]
+
+---
+# Spatial visualization
+
+.left-code[
+
+```r
+tm_shape(dem) + 
+  tm_raster(style = "cont",
+            midpoint = NA)
+```
+]
+
+.right-plot[
+![](index_files/figure-html/tm6-1.png)
+]
+
+---
+# Spatial visualization
+
+.left-code[
+
+```r
+tm_shape(dem) + 
+  tm_raster(style = "cont", 
+            midpoint = NA,
+            palette = "-RdYlGn")
+```
+
+```r
+tmaptools::palette_explorer()
+```
+]
+
+.right-plot[
+![](index_files/figure-html/tm7-1.png)
+]
+
+---
+# Spatial visualization
+
+.left-code[
+
+```r
+tm_shape(dem) + 
+  tm_raster(style = "fixed",
+            breaks = c(-99, 0, 300,
+                       600, 9999), 
+            midpoint = NA,
+            palette = "-RdYlGn",
+            title = "") + 
+  tm_layout(legend.position = c("LEFT", 
+                                "BOTTOM"))
+```
+]
+
+.right-plot[
+![](index_files/figure-html/tm8-1.png)
+]
+
+
+---
+# Spatial visualization
+
+.left-code[
+
+```r
+tm_shape(dem) + 
+  tm_raster(style = "fixed",
+            breaks = c(-99, 0, 300,
+                       600, 9999), 
+            labels = c("Depressions", 
+                       "Plains", 
+                       "Hills",
+                       "Mountains"),
+            midpoint = NA,
+            palette = "-RdYlGn",
+            title = "") + 
+  tm_layout(legend.position = c("LEFT", 
+                                "BOTTOM"))
+```
+]
+
+.right-plot[
+![](index_files/figure-html/tm9-1.png)
+]
+
+
+---
+# Spatial visualization
+
+.left-code[
+
+```r
+tm_shape(dem) + 
+  tm_raster(style = "fixed",
+            breaks = c(-99, 0, 300,
+                       600, 9999), 
+            labels = c("Depressions", 
+                       "Plains", 
+                       "Hills",
+                       "Mountains"),
+            midpoint = NA,
+            palette = c("#5E8B73",
+                        "#DAE97A", 
+                        "#EADC70", 
+                        "#AF8D5C"),
+            title = "") + 
+  tm_layout(legend.position = c("LEFT",
+                                "BOTTOM"))
+```
+]
+
+.right-plot[
+![](index_files/figure-html/tm10-1.png)
+]
+
+---
+# Spatial visualization
+
+
+```r
+map1 = tm_shape(dem) + 
+  tm_raster(style = "fixed",
+            breaks = c(-99, 0, 300, 600, 9999),
+            labels = c("Depressions", "Plains", "Hills", "Mountains"),
+            midpoint = NA, 
+            palette = c("#5E8B73", "#DAE97A", "#EADC70", "#AF8D5C"),
+            title = "") +
+  tm_layout(legend.position = c("LEFT", "BOTTOM"))
+```
+
+
+```r
+tmap_save(map1, "my_first_map.png")
+```
+
+---
+# Exercises
+
+1. Improve the `map1` object by e.g. adding a scale, north arrow, or title.
+Also try to add the Polish border to this map.
+2. Read the files `data/wlkp_pn.gpkg` and `data/wlkp_png_dem.tif` into R.
+Create a map showing the terrain model for the Wielkopolski National Park area.
+Save the obtained map to the file "WLKP_YOURNAME.png".
+3. Save the creates map to the file "WLKP_YOURNAME.html". 
+Open create file. 
+How is it different from the ".png" file?
+&lt;!-- 3. Additionally, try repeating the steps in the article [Geocomputation with R: maps extended](https://geocompr.github.io/geocompkg/articles/maps.html) in order to make a hillshade map of Poland. --&gt;
+
+
+---
+class: inverse, left, bottom
+# Data manipulation
+
+---
+# Data manipulation
+
+
+```r
+library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:raster':
+## 
+##     intersect, select, union
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+- The **dplyr** package allows for easy processing of tabular data.
+- Its capabilities include selecting specific columns or rows, adding new columns, or performing summaries.
+- More information can be found at https://dplyr.tidyverse.org/ and https://r4ds.had.co.nz/transform.html
+
+---
+# Attributes manipulation
+
+
+```r
+meteo_data = read.csv("data/poland_meteo_2017.csv", encoding = "UTF-8")
+head(meteo_data)
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; Kod.stacji &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Nazwa.stacji &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Rok &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Miesiac &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Dzien &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; tavg &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; precip &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; vapor_pres &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; humidity &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; pressure &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354150100 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOŁOBRZEG &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 92.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1013.5 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354150100 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOŁOBRZEG &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 76.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1011.1 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354150100 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOŁOBRZEG &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 92.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1007.1 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354150100 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOŁOBRZEG &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5.8 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 76.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 993.9 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354150100 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOŁOBRZEG &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -1.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 74.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1024.3 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354150100 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOŁOBRZEG &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -4.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 77.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1038.7 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Attributes manipulation
+
+
+```r
+meteo_stations = st_read("data/poland_stacje.gpkg")
+```
+
+```
+## Reading layer `polska_stacje' from data source `/home/jn/Science/conferences/whyr19-workshop/data/poland_stacje.gpkg' using driver `GPKG'
+## Simple feature collection with 1998 features and 2 fields
+## geometry type:  POINT
+## dimension:      XY
+## bbox:           xmin: 172691.6 ymin: 139488.3 xmax: 854361.7 ymax: 846760.3
+## epsg (SRID):    NA
+## proj4string:    +proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +units=m +no_defs
+```
+
+```r
+plot(st_geometry(meteo_stations))
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-23-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Attributes manipulation
+
+
+```r
+meteo_data_sel = meteo_data %&gt;% 
+  filter(Nazwa.stacji %in% unique(meteo_stations$NAZWA_ST))
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; Kod.stacji &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Nazwa.stacji &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Rok &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Miesiac &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Dzien &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; tavg &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; precip &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; vapor_pres &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; humidity &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; pressure &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 95.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1013.5 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5.8 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 80.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1010.7 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 93.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1007.0 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 77.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 992.7 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -2.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.8 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 55.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1023.6 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -5.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 79.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1038.8 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Attributes manipulation
+
+
+```r
+meteo_data_sel = meteo_data %&gt;% 
+  filter(Nazwa.stacji %in% unique(meteo_stations$NAZWA_ST)) %&gt;% 
+  mutate(data = as.Date(paste0(Rok, "-", Miesiac, "-", Dzien)))
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; Kod.stacji &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Nazwa.stacji &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Rok &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Miesiac &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Dzien &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; tavg &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; precip &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; vapor_pres &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; humidity &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; pressure &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; data &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 95.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1013.5 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-01 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5.8 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 80.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1010.7 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-02 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 93.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1007.0 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-03 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 77.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 992.7 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-04 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -2.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.8 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 55.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1023.6 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-05 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -5.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 79.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1038.8 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-06 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Attributes manipulation
+
+
+```r
+meteo_data_sel = meteo_data %&gt;% 
+  filter(Nazwa.stacji %in% unique(meteo_stations$NAZWA_ST)) %&gt;% 
+  mutate(data = as.Date(paste0(Rok, "-", Miesiac, "-", Dzien))) %&gt;% 
+  dplyr::select(-Rok, -Miesiac, -Dzien)
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; Kod.stacji &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Nazwa.stacji &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; tavg &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; precip &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; vapor_pres &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; humidity &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; pressure &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; data &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 95.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1013.5 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-01 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5.8 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 80.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1010.7 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-02 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 93.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1007.0 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-03 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 77.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 992.7 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-04 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -2.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.8 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 55.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1023.6 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-05 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 354160105 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KOSZALIN &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -5.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 79.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1038.8 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2017-01-06 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Attributes manipulation
+
+
+```r
+meteo_data_sel = meteo_data %&gt;% 
+  filter(Nazwa.stacji %in% unique(meteo_stations$NAZWA_ST)) %&gt;% 
+  mutate(data = as.Date(paste0(Rok, "-", Miesiac, "-", Dzien))) %&gt;% 
+  dplyr::select(-Rok, -Miesiac, -Dzien) %&gt;% 
+  summarize(tavg = mean(tavg), pressure = mean(pressure))
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; tavg &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; pressure &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 8.685298 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 960.5246 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Attributes manipulation
+
+
+```r
+meteo_data_sel = meteo_data %&gt;% 
+  filter(Nazwa.stacji %in% unique(meteo_stations$NAZWA_ST)) %&gt;% 
+  mutate(data = as.Date(paste0(Rok, "-", Miesiac, "-", Dzien))) %&gt;% 
+  dplyr::select(-Rok, -Miesiac, -Dzien) %&gt;% 
+  group_by(Kod.stacji) %&gt;% 
+  summarize(tavg = mean(tavg), pressure = mean(pressure))
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; Kod.stacji &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; tavg &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; pressure &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349190600 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9.2780822 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1017.513 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349190625 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.5290411 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.000 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349190650 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1978082 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.000 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349200660 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9.2180822 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1014.784 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349210670 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8.7728767 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1017.553 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349220690 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8.3227397 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1017.737 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Attribute joining
+
+
+```r
+meteo = meteo_stations %&gt;% 
+  left_join(meteo_data_sel, by = c("KOD_SZS" = "Kod.stacji"))
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; KOD_SZS &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; NAZWA_ST &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; tavg &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; pressure &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; geom &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 249190020 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; BRZEŹNICA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(545976.260510018, 233149.457458902) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 249199999 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; OSIEK &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(519109.405047427, 231411.908795745) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 249190040 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; GIERAŁTOWICE &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(527197.290270776, 230151.641154815) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 249190050 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; RADZISZÓW &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(558306.218144104, 230885.909302064) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 249190060 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; SIEPRAW &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(569259.6149073, 226821.435334128) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 249190070 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KĘTY &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(516182.656254972, 223533.556193128) &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Attribute joining
+
+
+```r
+meteo = meteo_stations %&gt;% 
+  inner_join(meteo_data_sel, by = c("KOD_SZS" = "Kod.stacji"))
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; KOD_SZS &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; NAZWA_ST &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; tavg &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; pressure &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; geom &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349190625 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; ZAKOPANE &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.5290411 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.000 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(569804.515915351, 158924.036586795) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349190650 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KASPROWY WIERCH &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1978082 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.000 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(571455.865783155, 152132.170449405) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349200660 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; NOWY SĄCZ &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9.2180822 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1014.784 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(621910.953224735, 196894.713701549) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349210670 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KROSNO &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8.7728767 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1017.553 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(699590.639267207, 208053.055658539) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 349220690 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; LESKO &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8.3227397 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1017.737 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(742035.646054704, 183036.071495296) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 350200570 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; KIELCE-SUKÓW &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8.4849315 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1016.895 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; c(619185.547042676, 328424.723335625) &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Reprojections
+
+.pull-left[
+
+```r
+plot(dem)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-38-1.png" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+
+```r
+plot(st_geometry(meteo), axes = TRUE)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-39-1.png" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Reprojections
+
+
+```r
+meteo = meteo_stations %&gt;% 
+  inner_join(meteo_data_sel, by = c("KOD_SZS" = "Kod.stacji")) %&gt;% 
+  st_transform(4326)
+```
+
+---
+# Reprojections
+
+
+```r
+tm_shape(dem) +
+  tm_raster() +
+  tm_shape(meteo) +
+  tm_symbols(col = "tavg", palette = "RdBu")
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-41-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Vector-raster interactions
+
+
+```r
+meteo$elev = extract(dem, meteo)
+head(meteo)
+```
+
+```
+## Simple feature collection with 6 features and 5 fields
+## geometry type:  POINT
+## dimension:      XY
+## bbox:           xmin: 19.96032 ymin: 49.23253 xmax: 22.3417 ymax: 50.81048
+## epsg (SRID):    4326
+## proj4string:    +proj=longlat +datum=WGS84 +no_defs
+##     KOD_SZS        NAZWA_ST      tavg pressure                      geom
+## 1 349190625        ZAKOPANE 6.5290411    0.000 POINT (19.96032 49.29382)
+## 2 349190650 KASPROWY WIERCH 0.1978082    0.000 POINT (19.98182 49.23253)
+## 3 349200660       NOWY SĄCZ 9.2180822 1014.784  POINT (20.6886 49.62714)
+## 4 349210670          KROSNO 8.7728767 1017.553 POINT (21.76917 49.70674)
+## 5 349220690           LESKO 8.3227397 1017.737  POINT (22.3417 49.46647)
+## 6 350200570    KIELCE-SUKÓW 8.4849315 1016.895 POINT (20.69221 50.81048)
+##   elev
+## 1  844
+## 2 1796
+## 3  275
+## 4  323
+## 5  384
+## 6  247
+```
+
+---
+# Vector-raster interactions
+
+.pull-left[
+
+```r
+lc = raster("data/poland_lc.tif")
+plot(lc)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-43-1.png" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+
+```r
+wlkp_pn = st_read("data/wlkp_pn.gpkg", quiet = TRUE)
+plot(st_geometry(wlkp_pn), axes = TRUE)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-44-1.png" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Vector-raster interactions
+
+
+```r
+wlkp_pn_lc = crop(lc, wlkp_pn)
+plot(wlkp_pn_lc)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-45-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Vector-raster interactions
+
+
+```r
+wlkp_pn_lc2 = mask(wlkp_pn_lc, wlkp_pn)
+plot(wlkp_pn_lc2)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-46-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Exercises
+
+1. Read the 2017 meteorological data and the location of the meteorological stations.
+Create a spatial object containing all measurements for three stations: `BIAŁYSTOK`, `KRAKÓW-BALICE`, and `POZNAŃ`. (Tip: use the `right_join()` function.
+2. Calculate the average temperature in January and July for these three stations.
+3. Determine the land cover of the three stations.
+4. Additional: improve the average temperature map presented in the "Reprojections" section.
+
+&lt;!-- 1. Select only the `name_long`, `continent`, and `pop` variables from the `world` object.  --&gt;
+&lt;!-- 1. Find all countries with the following characteristics: --&gt;
+&lt;!--     - Are in Africa. --&gt;
+&lt;!--     - Have a population greater than 35 mln. --&gt;
+&lt;!--     - Are in Africa and have a population greater than 35 mln. --&gt;
+&lt;!-- 1. Additional: plot the results of Exercise 2. --&gt;
+&lt;!-- 1. Create a new object, `world_pop_dens`, and add a new column `pop_dens` with a population density for each country. --&gt;
+&lt;!-- 1. Calculate an average population density on the world and the continent level. --&gt;
+&lt;!-- How can it be done? --&gt;
+&lt;!-- 1. Create a map with three panels representing a population density on a (1) country, (2) continent, and (3) world level. --&gt;
+
+---
+class: inverse, left, bottom
+# Resources
+
+---
+# Resources
+
+.pull-left[
+- http://geocompr.github.io/ - Lovelace R., Nowosad J., Muenchow J. 2019, **Geocomputation with R**. CRC Press
+- **sf** - https://r-spatial.github.io/sf/
+- **raster** - https://rspatial.org/spatial/index.html
+- **tmap** - https://github.com/mtennekes/tmap
+- **dplyr** - http://r4ds.had.co.nz/ - Wickham H., Goremund G. 2016. **R for Data Science**. O'Reilly Media
+]
+
+.pull-right[
+- Blogs (e.g., https://www.r-bloggers.com/, https://rweekly.org/)
+- Websites (e.g., https://gis.stackexchange.com/, https://stat.ethz.ch/mailman/listinfo/r-sig-geo)
+- Twitter `#rspatial`, `#geocompr`
+- Meetups
+]
+
+---
+class: center, middle, clear
+
+.pull-right[
+## About me:
+
+Twitter: <i class="ion  ion-social-twitter "></i> jakub_nowosad
+
+Email: nowosad.jakub@gmail.com
+
+https://nowosad.github.io
+
+https://geocompr.github.io/
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
